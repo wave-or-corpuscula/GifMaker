@@ -18,23 +18,34 @@ fn main() {
     }
 }
 fn run(config: GifConfig) -> Result<(), Box<dyn Error>> {
-    let child = Command::new("echo")
-    .args([
-        "hello"
-        ])
-    .spawn()
-    .expect("(((");
+    
+    let _ = create_background(&config);
     Ok(())
 }
 
-fn create_background(config: GifConfig) -> Result<(), Box<dyn Error>> {
-    let child = Command::new("ffmpeg")
+fn create_background(config: &GifConfig) -> Result<(), Box<dyn Error>> {
+    let mut child = Command::new("ffmpeg")
     .args([
         "-y",
         "-filter_complex",
+        &format!("color=c={}:d={}s [f_color]; \
+        color=c={}:d={}s [s_color]; \
+        [f_color][s_color]xfade=transition={}\
+            :duration={}s", 
+            config.f_color,
+            config.duration,
+            config.s_color,
+            config.duration,
+            config.transition,
+            config.duration,
+        ),
+        "./test/background.mp4"
         ])
     .spawn()
-    .expect("(((");
+    .expect("could not create a background");
+    println!("Background created, waiting for ffmpeg to finish");
+    child.wait()?;
+    println!("ffmpeg finished");
     Ok(())
 }
 
