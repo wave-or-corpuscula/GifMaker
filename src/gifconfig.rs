@@ -1,8 +1,6 @@
-use std::{env, str::FromStr};
+use std::{env, error::Error, fs::File, process::{Command, Stdio}, str::FromStr};
 
 pub struct GifConfig {
-    pub f_word: String,
-    pub s_word: String,
     pub f_color: String,
     pub s_color: String,
     pub duration: u32,
@@ -13,8 +11,8 @@ pub struct GifConfig {
 
 impl GifConfig {
     pub fn new(args: &[String]) -> Self {
-        let f_word = args[1].clone();
-        let s_word = args[2].clone();
+        send_to_file(args[1].clone(), "f_text.txt");
+        send_to_file(args[2].clone(), "s_text.txt");
 
         let f_color = parse_env("F_COLOR");
         let s_color = parse_env("S_COLOR");
@@ -23,8 +21,22 @@ impl GifConfig {
         let font_size = parse_env("FONT_SIZE");
         let line_length = parse_env("LINE_LENGTH");
 
-        Self {f_word, s_word, f_color, s_color, duration, transition, font_size, line_length}
+        Self {f_color, s_color, duration, transition, font_size, line_length}
     }
+}
+
+fn send_to_file(text: String, file_name: &str) -> Result<(), Box<dyn Error>> {
+    let file = File::create(&format!("/tmp/{}", file_name))?;
+    let mut child = Command::new("echo")
+    .args([
+        "-e",
+        &format!("{}", text),
+    ])
+    .stdout(Stdio::from(file))
+    .spawn()
+    .expect(&format!("cannot write text: {} in file: {}", text, file_name));
+     child.wait()?;
+     Ok(())
 }
 
 fn parse_env<T>(key: &str) -> T 
