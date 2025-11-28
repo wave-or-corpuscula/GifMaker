@@ -28,24 +28,24 @@ fn main() {
 
 fn run(config: GifConfig) -> Result<(), Box<dyn Error>> {
 
-    // let (mut f_text, mut s_text) = (String::new(), String::new());
-    let (mut f_text, mut s_text) = (
-        String::from("Достаточно длинная фраза, чтобы ее перенести"), 
-        String::from("Еще одна, не менее длинная фраза, ага ага ага")
-    );
+    let (mut f_text, mut s_text) = (String::new(), String::new());
+    // let (mut f_text, mut s_text) = (
+    //     String::from("Достаточно длинная фраза, чтобы ее перенести"), 
+    //     String::from("Еще одна, не менее длинная фраза, ага ага ага")
+    // );
 
-    // println!("Введите первую фразу:");
-    // io::stdin()
-    //     .read_line(&mut f_text)
-    //     .expect("Ошибка при чтении фразы");
+    println!("Введите первую фразу:");
+    io::stdin()
+        .read_line(&mut f_text)
+        .expect("Ошибка при чтении фразы");
     
-    // println!("Введите вторую фразу:");
-    // io::stdin()
-    //     .read_line(&mut s_text)
-    //     .expect("Ошибка при чтении фразы");
+    println!("Введите вторую фразу:");
+    io::stdin()
+        .read_line(&mut s_text)
+        .expect("Ошибка при чтении фразы");
 
-    // f_text = split_by_lines(f_text, config.line_length);
-    // s_text = split_by_lines(s_text, config.line_length);
+    f_text = split_by_lines(&f_text, config.line_length);
+    s_text = split_by_lines(&s_text, config.line_length);
     
     write_file(f_text, "/tmp/f_text.txt")?;
     write_file(s_text, "/tmp/s_text.txt")?;
@@ -85,8 +85,8 @@ fn create_gif(config: &GifConfig) -> Result<(), Box<dyn Error>> {
     let mut child = Command::new("ffmpeg")
     .args([
         "-y", "-i", "./test/background.mp4",
-        "-vf", &format!("drawtext=textfile=/tmp/f_text.txt:reload=1:line_spacing=-10:x=(w-text_w)/2:y=(h-text_h)/2:fontsize={}:fontcolor={},\
-            drawtext=textfile=/tmp/s_text.txt:x=(w-text_w)/2:y=(h-text_h)/2:fontsize={}:fontcolor={}:alpha='if(gte(t,2),if(lte(t,4),(t-2)/2,1),0)'",
+        "-vf", &format!("drawtext=textfile=/tmp/f_text.txt:reload=1:text_align=center:line_spacing=-10:x=(w-text_w)/2:y=(h-text_h)/2:fontsize={}:fontcolor={},\
+            drawtext=textfile=/tmp/s_text.txt:text_align=center:x=(w-text_w)/2:y=(h-text_h)/2:fontsize={}:fontcolor={}:alpha='if(gte(t,2),if(lte(t,4),(t-2)/2,1),0)'",
         config.font_size,
         config.s_color,
         config.font_size,

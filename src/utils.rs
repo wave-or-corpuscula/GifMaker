@@ -28,12 +28,24 @@ where
     }
 }
 
-pub fn split_by_lines(text: String, line_length: u32) -> String {
-    let mut new_text = String::from(text);
-    let mut index: usize = line_length as usize - 1;
-    while new_text.len() > index{
-        new_text.insert_str(index, "\n");
-        index += line_length as usize;
+pub fn split_by_lines(text: &str, line_length: u32) -> String {
+    let words: Vec<&str> = text.split_whitespace().collect();
+    let mut result = String::new();
+    let mut current_line_length = 0;
+
+    for word in words {
+        if current_line_length > 0 &&
+           current_line_length + word.chars().count() > line_length as usize {
+            result.push_str(&format!("\n{}", word));
+            current_line_length = word.chars().count();
+        } else if current_line_length > 0 {
+            result.push_str(&format!(" {}", word));
+            current_line_length += word.chars().count();
+        } else {
+            result.push_str(word);
+            current_line_length = word.chars().count();
+        }
     }
-    new_text
+
+    result
 }

@@ -20,16 +20,3 @@ impl Display for ConfigError {
 
 
 impl std::error::Error for ConfigError {}
-
-
-// #[derive(Debug, Error)]
-// enum AppError {
-//     #[error("Ffmpeg не найден. Установите FFmpeg: {0}")]
-//     FFmpegNotFound(String),
-
-//     #[error("Ошибка создания файла: {0}")]
-//     FileCreationError(String),
-
-//     #[error("Ошибка выполнения команды: {0}")]
-//     CommandError(String),
-// }
