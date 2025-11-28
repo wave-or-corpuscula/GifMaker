@@ -1,26 +1,57 @@
-use std::{env, error::Error, process::{self, Command}};
+use std::{env, error::Error, io, process::{self, Command}};
 
 use dotenv;
+
+mod utils;
+mod errors;
 mod gifconfig;
-use gifconfig::GifConfig;
+use gifconfig::{GifConfig, write_file};
+use crate::{errors::ConfigError};
+use utils::split_by_lines;
+
 fn main() {
     dotenv::dotenv().ok();
-    let args: Vec<String> = env::args().collect();
-    if args.len() < 3 {
-        panic!("Not enough arguments!")
-    }
 
-    let config = GifConfig::new(&args);
+    let config = match GifConfig::parse() {
+        Ok(config) => config,
+        Err(e) => {
+            eprintln!("Ошибка во время парсинга файла конфигураций: {e}");
+            process::exit(1);
+        }
+    };
     
     if let Err(e) = run(config) {
-        println!("Application error {e}");
+        println!("Ошибка приложения {e}");
         process::exit(1)
     }
 }
+
 fn run(config: GifConfig) -> Result<(), Box<dyn Error>> {
+
+    // let (mut f_text, mut s_text) = (String::new(), String::new());
+    let (mut f_text, mut s_text) = (
+        String::from("Достаточно длинная фраза, чтобы ее перенести"), 
+        String::from("Еще одна, не менее длинная фраза, ага ага ага")
+    );
+
+    // println!("Введите первую фразу:");
+    // io::stdin()
+    //     .read_line(&mut f_text)
+    //     .expect("Ошибка при чтении фразы");
     
-    let _ = create_background(&config);
-    let _ = create_gif(&config);
+    // println!("Введите вторую фразу:");
+    // io::stdin()
+    //     .read_line(&mut s_text)
+    //     .expect("Ошибка при чтении фразы");
+
+    // f_text = split_by_lines(f_text, config.line_length);
+    // s_text = split_by_lines(s_text, config.line_length);
+    
+    write_file(f_text, "/tmp/f_text.txt")?;
+    write_file(s_text, "/tmp/s_text.txt")?;
+
+    create_background(&config)
+        .and_then(|_| create_gif(&config))?;
     Ok(())
 }
 
@@ -64,7 +95,7 @@ fn create_gif(config: &GifConfig) -> Result<(), Box<dyn Error>> {
     ])
     .spawn()
     .expect("cannot cover background with text");
-    child.wait();
+    child.wait()?;
     Ok(())
 }
 
@@ -74,14 +105,6 @@ mod tests {
     #[test]
     fn dotenv_loading() {
         dotenv::dotenv().ok();
-        let config = GifConfig::new(&[String::new(), 
-                                                    String::new(), 
-                                                    String::new()]);
-        println!("F_COLOR={}", config.f_color);
-        println!("S_COLOR={}", config.s_color);
-        println!("DURATION={}", config.duration);
-        println!("TRANSITION={}", config.transition);
-        println!("FONT_SIZE={}", config.font_size);
-        println!("LINE_LENGTH={}", config.line_length);
+        let _config = GifConfig::parse();
     }
 }

@@ -72,8 +72,8 @@ max_length=15
 first_text="wwwwwwwwwwwwwww\nwwwwww-wwwwwwww\nwwwwwwwwwwwwwww\nwwwwww-wwwwwwww"
 second_text="Нет, я так не считаю"
 
-echo -e "$first_text" > /tmp/first_text.txt
-echo -e "$second_text" > /tmp/second_text.txt
+echo -e "$first_text" > /tmp/f_text.txt
+echo -e "$second_text" > /tmp/s_text.txt
 
 
 rm $output
@@ -87,8 +87,8 @@ ffmpeg -y -filter_complex \
 
 # Наложение текста на виде
 ffmpeg -y -i $background \
-       -vf "drawtext=textfile=/tmp/first_text.txt:reload=1:line_spacing=-10:x=(w-text_w)/2:y=(h-text_h)/2:fontsize=$font_size:fontcolor=blue,\
-            drawtext=textfile=/tmp/second_text.txt:x=(w-text_w)/2:y=(h-text_h)/2:fontsize=$font_size:fontcolor=red:alpha='if(gte(t,2),if(lte(t,4),(t-2)/2,1),0)'" \
+       -vf "drawtext=textfile=/tmp/f_text.txt:reload=1:line_spacing=-10:x=(w-text_w)/2:y=(h-text_h)/2:fontsize=$font_size:fontcolor=blue,\
+            drawtext=textfile=/tmp/s_text.txt:x=(w-text_w)/2:y=(h-text_h)/2:fontsize=$font_size:fontcolor=red:alpha='if(gte(t,2),if(lte(t,4),(t-2)/2,1),0)'" \
         -c:a copy $output
 
 ffplay $output

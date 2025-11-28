@@ -1,4 +1,8 @@
-use std::{env, error::Error, fs::File, process::{Command, Stdio}, str::FromStr};
+use std::{env, error::Error, fs::{File, OpenOptions}, io::Write, process::{Command, Stdio}, str::FromStr};
+
+use crate::utils::parse_env_with_default;
+use crate::errors::ConfigError;
+
 
 pub struct GifConfig {
     pub f_color: String,
@@ -10,22 +14,32 @@ pub struct GifConfig {
 }
 
 impl GifConfig {
-    pub fn new(args: &[String]) -> Self {
-        send_to_file(args[1].clone(), "f_text.txt");
-        send_to_file(args[2].clone(), "s_text.txt");
+    pub fn parse() -> Result<Self, ConfigError> {
+        let f_color = parse_env_with_default("F_COLOR", "RED".to_string())?;
+        let s_color = parse_env_with_default("S_COLOR", "BLUE".to_string())?;
+        let duration = parse_env_with_default("DURATION", 5)?;
+        let transition = parse_env_with_default("TRANSITION", "vertclose".to_string())?;
+        let font_size = parse_env_with_default("FONT_SIZE", 20)?;
+        let line_length = parse_env_with_default("LINE_LENGTH", 15)?;
 
-        let f_color = parse_env("F_COLOR");
-        let s_color = parse_env("S_COLOR");
-        let duration = parse_env("DURATION");
-        let transition = parse_env("TRANSITION");
-        let font_size = parse_env("FONT_SIZE");
-        let line_length = parse_env("LINE_LENGTH");
-
-        Self {f_color, s_color, duration, transition, font_size, line_length}
+        Ok(Self {f_color, s_color, duration, transition, font_size, line_length})
     }
 }
 
-fn send_to_file(text: String, file_name: &str) -> Result<(), Box<dyn Error>> {
+pub fn write_file(text: String, path: &str) -> Result<(), ConfigError>
+{
+    let mut file = OpenOptions::new()
+        .write(true)
+        .truncate(true)
+        .create(true)
+        .open(path)
+        .map_err(ConfigError::IoError)?;
+
+    file.write_all(&text.as_bytes())
+        .map_err(ConfigError::IoError)
+}
+
+pub fn send_to_file(text: String, file_name: &str) -> Result<(), Box<dyn Error>> {
     let file = File::create(&format!("/tmp/{}", file_name))?;
     let mut child = Command::new("echo")
     .args([
@@ -37,14 +51,4 @@ fn send_to_file(text: String, file_name: &str) -> Result<(), Box<dyn Error>> {
     .expect(&format!("cannot write text: {} in file: {}", text, file_name));
      child.wait()?;
      Ok(())
-}
-
-fn parse_env<T>(key: &str) -> T 
-where
-    T: FromStr
-{
-    env::var(key)
-    .ok()
-    .and_then(|var| var.parse::<T>().ok())
-    .unwrap()
 }
