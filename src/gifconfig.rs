@@ -25,30 +25,3 @@ impl GifConfig {
         Ok(Self {f_color, s_color, duration, transition, font_size, line_length})
     }
 }
-
-pub fn write_file(text: String, path: &str) -> Result<(), ConfigError>
-{
-    let mut file = OpenOptions::new()
-        .write(true)
-        .truncate(true)
-        .create(true)
-        .open(path)
-        .map_err(ConfigError::IoError)?;
-
-    file.write_all(&text.as_bytes())
-        .map_err(ConfigError::IoError)
-}
-
-pub fn send_to_file(text: String, file_name: &str) -> Result<(), Box<dyn Error>> {
-    let file = File::create(&format!("/tmp/{}", file_name))?;
-    let mut child = Command::new("echo")
-    .args([
-        "-e",
-        &format!("{}", text),
-    ])
-    .stdout(Stdio::from(file))
-    .spawn()
-    .expect(&format!("cannot write text: {} in file: {}", text, file_name));
-     child.wait()?;
-     Ok(())
-}

@@ -1,15 +1,38 @@
-use std::{env, error::Error, io, process::{self, Command}};
+use std::{env, error::Error, fs::remove_file, io, process::{self, Command}};
 
 use dotenv;
 
 mod utils;
 mod errors;
+mod service;
 mod gifconfig;
-use gifconfig::{GifConfig, write_file};
-use crate::{errors::ConfigError};
-use utils::split_by_lines;
+use gifconfig::GifConfig;
+use utils::{split_by_lines, get_file_abs_path, write_file};
+use service::{help_message, restore_config};
 
 fn main() {
+    let args: Vec<String> = env::args().collect();
+    
+    if args.contains(&String::from("--help")) {
+        match help_message() {
+            Ok(_) => process::exit(0),
+            Err(e) => {
+                eprintln!("Возникла ошибка: {e}");
+                process::exit(1)
+            }
+        };
+    }
+
+    if args.contains(&String::from("--restore-config")) {
+        match restore_config() {
+            Ok(_) => process::exit(0),
+            Err(e) => {
+                eprintln!("Возникла ошибка: {e}");
+                process::exit(1)
+            }
+        };
+    }
+
     dotenv::dotenv().ok();
 
     let config = match GifConfig::parse() {
@@ -25,6 +48,8 @@ fn main() {
         process::exit(1)
     }
 }
+
+
 
 fn run(config: GifConfig) -> Result<(), Box<dyn Error>> {
 
@@ -47,8 +72,8 @@ fn run(config: GifConfig) -> Result<(), Box<dyn Error>> {
     f_text = split_by_lines(&f_text, config.line_length);
     s_text = split_by_lines(&s_text, config.line_length);
     
-    write_file(f_text, "/tmp/f_text.txt")?;
-    write_file(s_text, "/tmp/s_text.txt")?;
+    write_file(f_text, "/tmp/f_text.txt")
+        .and_then(|_| write_file(s_text, "/tmp/s_text.txt"))?;
 
     create_background(&config)
         .and_then(|_| create_gif(&config))?;
@@ -59,6 +84,7 @@ fn create_background(config: &GifConfig) -> Result<(), Box<dyn Error>> {
     let mut child = Command::new("ffmpeg")
     .args([
         "-y",
+        "-loglevel", "error",
         "-filter_complex",
         &format!("color=c={}:d={}s [f_color]; \
         color=c={}:d={}s [s_color]; \
@@ -71,31 +97,35 @@ fn create_background(config: &GifConfig) -> Result<(), Box<dyn Error>> {
             config.transition,
             config.duration,
         ),
-        "./test/background.mp4"
+        "./gif/background.mp4"
         ])
     .spawn()
-    .expect("could not create a background");
-    println!("Background created, waiting for ffmpeg to finish");
+    .expect("не удалось создать задний фон");
     child.wait()?;
-    println!("ffmpeg finished");
     Ok(())
 }
 
 fn create_gif(config: &GifConfig) -> Result<(), Box<dyn Error>> {
     let mut child = Command::new("ffmpeg")
     .args([
-        "-y", "-i", "./test/background.mp4",
+        "-y",
+        "-loglevel", "error",
+        "-i", "./gif/background.mp4",
         "-vf", &format!("drawtext=textfile=/tmp/f_text.txt:reload=1:text_align=center:line_spacing=-10:x=(w-text_w)/2:y=(h-text_h)/2:fontsize={}:fontcolor={},\
             drawtext=textfile=/tmp/s_text.txt:text_align=center:x=(w-text_w)/2:y=(h-text_h)/2:fontsize={}:fontcolor={}:alpha='if(gte(t,2),if(lte(t,4),(t-2)/2,1),0)'",
         config.font_size,
         config.s_color,
         config.font_size,
         config.f_color),
-        "-c:a", "copy", "./test/output.gif"
+        "-c:a", "copy", "./gif/output.gif"
     ])
     .spawn()
-    .expect("cannot cover background with text");
+    .expect("не удалось наложить текст на задний фон");
     child.wait()?;
+    remove_file("./gif/background.mp4")?;
+    let output_path = get_file_abs_path("./gif/output.gif")?;
+    println!("Ваш файл сохранен в: {}", output_path);
+    Command::new("xdg-open").arg(&output_path).spawn()?;
     Ok(())
 }
 

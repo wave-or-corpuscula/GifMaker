@@ -1,4 +1,4 @@
-use std::{env, str::FromStr};
+use std::{env, fs::OpenOptions, io::Error, path::PathBuf, str::FromStr, io::Write};
 
 use crate::errors::ConfigError;
 
@@ -12,19 +12,6 @@ where
                 .map_err(|_| ConfigError::InvalidValue(var))
         }
         Err(_) => Ok(default) // Если переменная отсутствует - возвращаем значение по умолчанию
-    }
-}
-
-fn parse_env_required<T>(key: &str) -> Result<T, ConfigError>
-where
-    T: FromStr,
-{
-    match env::var(key) {
-        Ok(var) => {
-            var.parse()
-                .map_err(|_| ConfigError::InvalidValue(var))
-        }
-        Err(_) => Err(ConfigError::MissingVar(key.to_string()))
     }
 }
 
@@ -48,4 +35,22 @@ pub fn split_by_lines(text: &str, line_length: u32) -> String {
     }
 
     result
+}
+
+pub fn get_file_abs_path(path: &str) -> Result<String, Error> {
+    let srcdir = PathBuf::from(path);
+    Ok(std::fs::canonicalize(&srcdir)?.display().to_string())
+}
+
+pub fn write_file(text: String, path: &str) -> Result<(), ConfigError>
+{
+    let mut file = OpenOptions::new()
+        .write(true)
+        .truncate(true)
+        .create(true)
+        .open(path)
+        .map_err(ConfigError::IoError)?;
+
+    file.write_all(&text.as_bytes())
+        .map_err(ConfigError::IoError)
 }
