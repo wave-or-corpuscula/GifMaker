@@ -17,7 +17,7 @@ fn main() {
         match help_message() {
             Ok(_) => process::exit(0),
             Err(e) => {
-                eprintln!("Возникла ошибка: {e}");
+                eprintln!("Error occured: {e}");
                 process::exit(1)
             }
         };
@@ -27,7 +27,7 @@ fn main() {
         match restore_config() {
             Ok(_) => process::exit(0),
             Err(e) => {
-                eprintln!("Возникла ошибка: {e}");
+                eprintln!("Error occured: {e}");
                 process::exit(1)
             }
         };
@@ -38,13 +38,13 @@ fn main() {
     let config = match GifConfig::parse() {
         Ok(config) => config,
         Err(e) => {
-            eprintln!("Ошибка во время парсинга файла конфигураций: {e}");
+            eprintln!("Error while config file parsing: {e}");
             process::exit(1);
         }
     };
     
     if let Err(e) = run(config) {
-        println!("Ошибка приложения {e}");
+        println!("Application error {e}");
         process::exit(1)
     }
 }
@@ -54,20 +54,16 @@ fn main() {
 fn run(config: GifConfig) -> Result<(), Box<dyn Error>> {
 
     let (mut f_text, mut s_text) = (String::new(), String::new());
-    // let (mut f_text, mut s_text) = (
-    //     String::from("Достаточно длинная фраза, чтобы ее перенести"), 
-    //     String::from("Еще одна, не менее длинная фраза, ага ага ага")
-    // );
 
-    println!("Введите первую фразу:");
+    println!("Enter first phrase:");
     io::stdin()
         .read_line(&mut f_text)
-        .expect("Ошибка при чтении фразы");
+        .expect("Error while reading phrase.");
     
-    println!("Введите вторую фразу:");
+    println!("Enter second phrase:");
     io::stdin()
         .read_line(&mut s_text)
-        .expect("Ошибка при чтении фразы");
+        .expect("Error while reading phrase.");
 
     f_text = split_by_lines(&f_text, config.line_length);
     s_text = split_by_lines(&s_text, config.line_length);
@@ -100,7 +96,7 @@ fn create_background(config: &GifConfig) -> Result<(), Box<dyn Error>> {
         "./gif/background.mp4"
         ])
     .spawn()
-    .expect("не удалось создать задний фон");
+    .expect("cannot create background");
     child.wait()?;
     Ok(())
 }
@@ -120,11 +116,11 @@ fn create_gif(config: &GifConfig) -> Result<(), Box<dyn Error>> {
         "-c:a", "copy", "./gif/output.gif"
     ])
     .spawn()
-    .expect("не удалось наложить текст на задний фон");
+    .expect("cannot ");
     child.wait()?;
     remove_file("./gif/background.mp4")?;
     let output_path = get_file_abs_path("./gif/output.gif")?;
-    println!("Ваш файл сохранен в: {}", output_path);
+    println!("Your file saved at: {}", output_path);
     Command::new("xdg-open").arg(&output_path).spawn()?;
     Ok(())
 }

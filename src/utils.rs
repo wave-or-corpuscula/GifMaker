@@ -11,7 +11,7 @@ where
             var.parse()
                 .map_err(|_| ConfigError::InvalidValue(var))
         }
-        Err(_) => Ok(default) // Если переменная отсутствует - возвращаем значение по умолчанию
+        Err(_) => Ok(default)
     }
 }
 

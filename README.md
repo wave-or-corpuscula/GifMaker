@@ -6,11 +6,6 @@ A Rust command-line tool that creates animated GIFs from text with custom backgr
 
 GifMaker creates animated GIFs with two text phrases that fade in with smooth transitions. The tool generates a colored background video and overlays your text with configurable fonts, colors, and transitions.
 
-
-## Example
-
-![Example of script usage](assets/output.gif)
-
 ## Dependencies
 
 ### System Dependencies
@@ -129,13 +124,15 @@ gif/output.gif
 
 ```bash
 $ ./gifmaker
-Введите первую фразу:
+Enter first phrase:
 Hello World! This is my first phrase
-Введите вторую фразу:
+Enter second phrase:
 And this is the second phrase with more text
 
-Ваш файл сохранен в: /your/script/location/gifmaker/gif/output.gif
+Your file saved at: /your/script/location/gifmaker/gif/output.gif
 ```
+
+![Example of script usage](assets/output.gif)
 
 ## Project Structure
 

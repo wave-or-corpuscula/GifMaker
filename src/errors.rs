@@ -10,8 +10,8 @@ pub enum ConfigError {
 impl Display for ConfigError {
     fn fmt(&self, f: &mut Formatter) -> Result {
         match self {
-            ConfigError::InvalidValue(val) => write!(f, "Неверное значение: {}", val),
-            ConfigError::IoError(e) => write!(f, "Ошибка ввода/вывода: {}", e),
+            ConfigError::InvalidValue(val) => write!(f, "Wrong valud: {}", val),
+            ConfigError::IoError(e) => write!(f, "IO error: {}", e),
         }
     }
 }

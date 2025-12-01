@@ -3,17 +3,17 @@ use std::error::Error;
 use crate::utils::{get_file_abs_path, write_file};
 
 pub fn help_message() -> Result<(), Box<dyn Error>>{
-    let env_path = get_file_abs_path("./.env").unwrap_or(String::from("Не удалось найти файл конфигурации"));
+    let env_path = get_file_abs_path("./.env").unwrap_or(String::from("Cannot find configuration file"));
     println!("\
-Использование команды:
+Usage:
 gifmaker 
-Введите первую фразу: [вводим]
-Введите вторую фразу: [вводим]
+Enter first phrase: [enter]
+Enter second phrase: [enter]
 
-Конфигурации можно изменить, отредактировав файл с конфигурациями:
+You can change configuration at configuration file:
 {env_path}
 
---restore-config    Восстановить файл конфигурации 
+--restore-config    Restore configuration file
 ");
 
     Ok(())
@@ -21,12 +21,12 @@ gifmaker
 
 pub fn restore_config() -> Result<(), Box<dyn Error>> {
     let config_text = "\
-# All avaliable colors
+# All available colors
 # ffmpeg -colors
 F_COLOR=DarkGreen
 S_COLOR=DarkBlue
 
-# All avaliable transitions
+# All available transitions
 # ffmpeg --help filter=xfade
 TRANSITION=vertclose
 
@@ -36,6 +36,6 @@ FONT_SIZE=20
 LINE_LENGTH=20";
 
     write_file(String::from(config_text), ".env")?;
-    println!("Файл конфигурации восстановлен!");
+    println!("Configuration file restored!");
     Ok(())
 }
