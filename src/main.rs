@@ -12,6 +12,23 @@ use service::{help_message, restore_config};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
+
+    if args.contains(&String::from("--first")) && args.contains(&String::from("--second")) {
+        dotenv::dotenv().ok();
+        let config = match GifConfig::parse() {
+            Ok(config) => config,
+            Err(e) => {
+                eprintln!("Error while config file parsing: {e}");
+                process::exit(1);
+            }
+        };
+
+        if let Err(e) = run_inline(args, config) {
+            println!("Application error {e}");
+            process::exit(1)
+        }
+        process::exit(0);
+    }
     
     if args.contains(&String::from("--help")) {
         match help_message() {
@@ -47,6 +64,48 @@ fn main() {
         println!("Application error {e}");
         process::exit(1)
     }
+}
+
+fn run_inline(args: Vec<String>, config: GifConfig) -> Result<(), Box<dyn Error>> {
+    let mut first_phrase = String::new();
+    let mut second_phrase = String::new();
+    let mut collecting_first = false;
+    let mut collecting_second = false;
+
+    for arg in &args[1..] {
+        if arg == "--first" {
+            collecting_first = true;
+            collecting_second = false;
+        } else if arg == "--second" {
+            collecting_first = false;
+            collecting_second = true;
+        } else if collecting_first {
+            if !first_phrase.is_empty() {
+                first_phrase.push(' ');
+            }
+            first_phrase.push_str(arg);
+        } else if collecting_second {
+            if !second_phrase.is_empty() {
+                second_phrase.push(' ');
+            }
+            second_phrase.push_str(arg);
+        }
+    }
+
+    if first_phrase.is_empty() || second_phrase.is_empty() {
+        return Err("Both --first and --second phrases must be provided".into());
+    }
+
+    let f_text = split_by_lines(&first_phrase, config.line_length);
+    let s_text = split_by_lines(&second_phrase, config.line_length);
+
+    write_file(f_text, "/tmp/f_text.txt")
+        .and_then(|_| write_file(s_text, "/tmp/s_text.txt"))?;
+
+    create_background(&config)
+        .and_then(|_| create_gif(&config))?;
+
+    Ok(())
 }
 
 
@@ -102,6 +161,10 @@ fn create_background(config: &GifConfig) -> Result<(), Box<dyn Error>> {
 }
 
 fn create_gif(config: &GifConfig) -> Result<(), Box<dyn Error>> {
+    let gif_name = format!(
+        "gif_{}.gif",
+        chrono::Local::now().format("%Y-%m-%d_%H:%M:%S")
+    );
     let mut child = Command::new("ffmpeg")
     .args([
         "-y",
@@ -113,13 +176,13 @@ fn create_gif(config: &GifConfig) -> Result<(), Box<dyn Error>> {
         config.s_color,
         config.font_size,
         config.f_color),
-        "-c:a", "copy", "./gif/output.gif"
+        "-c:a", "copy", &format!("./gif/{}", gif_name)
     ])
     .spawn()
     .expect("cannot ");
     child.wait()?;
     remove_file("./gif/background.mp4")?;
-    let output_path = get_file_abs_path("./gif/output.gif")?;
+    let output_path = get_file_abs_path(&format!("./gif/{}", gif_name))?;
     println!("Your file saved at: {}", output_path);
     Command::new("xdg-open").arg(&output_path).spawn()?;
     Ok(())

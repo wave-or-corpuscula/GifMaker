@@ -6,9 +6,14 @@ pub fn help_message() -> Result<(), Box<dyn Error>>{
     let env_path = get_file_abs_path("./.env").unwrap_or(String::from("Cannot find configuration file"));
     println!("\
 Usage:
-gifmaker 
+
+Interactive mode:
+gifmaker
 Enter first phrase: [enter]
 Enter second phrase: [enter]
+
+Inline mode:
+gifmaker --first \"Your first phrase\" --second \"Your second phrase\"
 
 You can change configuration at configuration file:
 {env_path}

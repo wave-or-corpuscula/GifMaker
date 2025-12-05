@@ -93,6 +93,10 @@ LINE_LENGTH=20
 
 ## Usage
 
+GifMaker supports two modes of operation:
+
+### Interactive Mode
+
 1. **Run the application**:
 ```bash
 ./target/release/gifmaker
@@ -102,26 +106,45 @@ LINE_LENGTH=20
 
 3. **Enter your second text phrase** when prompted.
 
-4. The application will:
-   - Generate a colored background video
-   - Add your text overlay with the configured transition
-   - Create the final GIF in the `gif/` directory
-   - Automatically open the result with your system's default viewer
+### Inline Mode
+
+**For automation and scripting:**
+```bash
+./target/release/gifmaker --first "Your first phrase" --second "Your second phrase"
+```
+
+**Example with multi-word phrases:**
+```bash
+./target/release/gifmaker --first "Hello World! This is awesome" --second "And this is the second phrase"
+```
+
+### What Happens Next
+
+The application will:
+- Generate a colored background video with transition effects
+- Add your text overlay with the configured colors and fonts
+- Create the final GIF with a timestamp in the `gif/` directory
+- Automatically open the result with your system's default viewer
 
 ### Command Line Options
 
-- `--help` - Display help message
-- `--restore-config` - Restore default configuration
+- `--help` - Display detailed help message
+- `--restore-config` - Restore default configuration file
+- `--first "<text>"` - Specify first phrase (use with --second)
+- `--second "<text>"` - Specify second phrase (use with --first)
 
 ## Output
 
-The generated GIF will be saved as:
+The generated GIF files are saved with timestamps to avoid overwriting:
+
 ```
-gif/output.gif
+gif/gif_2024-12-05_14:30:25.gif
+gif/gif_2024-12-05_14:31:10.gif
 ```
 
-## Example
+## Examples
 
+### Interactive Mode Example
 ```bash
 $ ./gifmaker
 Enter first phrase:
@@ -129,7 +152,22 @@ Hello World! This is my first phrase
 Enter second phrase:
 And this is the second phrase with more text
 
-Your file saved at: /your/script/location/gifmaker/gif/output.gif
+Your file saved at: /home/user/gifmaker/gif/gif_2024-12-05_14:30:25.gif
+```
+
+### Inline Mode Example
+```bash
+$ ./gifmaker --first "Quick demo" --second "Second phrase here"
+
+Your file saved at: /home/user/gifmaker/gif/gif_2024-12-05_14:31:10.gif
+```
+
+### Automation Example
+```bash
+# Generate multiple GIFs in a script
+./gifmaker --first "Starting process" --second "Initialization complete"
+./gifmaker --first "Processing data" --second "Almost finished"
+./gifmaker --first "Done!" --second "Task completed successfully"
 ```
 
 ![Example of script usage](assets/output.gif)
